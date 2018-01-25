@@ -1,4 +1,8 @@
-/* Query: Your boss is worried about a few of the sales representatives. He wants a report to see the last time each one of them had an order. Please show the order id, the employee last name, the employee first name, the date of the order, and the city the order was shipped to. But he doesn't want to see every order, just the most recent order for each employee. Thanks!*/
+/* Query: Your boss is worried about a few of the sales representatives.
+He wants a report to see the last time each one of them had an order.
+Please show the order id, the employee last name, the employee first name,
+the date of the order, and the city the order was shipped to.
+But he doesn't want to see every order, just the most recent order for each employee. Thanks!*/
 
 /* my version*/
 
@@ -7,15 +11,17 @@ FROM orders
 INNER JOIN employees ON 1=1
     AND employees.EmployeeID = orders.EmployeeID
 
-/*Condition for only those rows to be selected where order date is the latest
-one for each given employee, i.e. testing for last order date and employee pairs */
-
 WHERE EXISTS
     (SELECT 1
     FROM (SELECT orders.EmployeeID, max(OrderDate) AS max_OrderDate
         FROM orders
         GROUP BY orders.employeeID) AS last_orders
     WHERE orders.EmployeeID = last_orders.EmployeeID AND orders.OrderDate = last_orders.max_OrderDate);
+
+    /*Condition for only those rows to be selected where order date is the latest
+    one for each given employee, i.e. testing for last order date and employee pairs */
+
+
 
 
 /*answer suggested by the course*/

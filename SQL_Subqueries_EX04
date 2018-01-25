@@ -1,0 +1,4 @@
+SELECT customerID, orderDate, shippedDate
+FROM orders
+WHERE shippedDate IN (
+    SELECT MAX(shippedDate) FROM orders);

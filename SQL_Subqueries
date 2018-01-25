@@ -1,6 +1,16 @@
-SELECT DISTINCT productLine
-FROM products
-    INNER JOIN orderdetails ON products.productCode=orderdetails.productCode
-    INNER JOIN orders ON orderdetails.orderNumber=orders.orderNumber
-    INNER JOIN customers ON orders.customerNumber=customers.customerNumber
-WHERE customers.customerName LIKE '%Rovelli Gifts%';
+SELECT  productLine
+FROM ProductLines
+WHERE productLine IN (
+    SELECT  p.productLine
+    FROM products p
+    JOIN orderdetails od ON p.productCode = od.productCode
+    JOIN orders o ON od.orderNumber = o.orderNumber
+    JOIN customers c ON o.customerNumber = c.customerNumber
+    WHERE c.customerName = 'Rovelli Gifts';
+
+    SELECT DISTINCT productLine
+    FROM products
+        INNER JOIN orderdetails ON products.productCode=orderdetails.productCode
+        INNER JOIN orders ON orderdetails.orderNumber=orders.orderNumber
+        INNER JOIN customers ON orders.customerNumber=customers.customerNumber
+    WHERE customers.customerName LIKE '%Rovelli Gifts%';

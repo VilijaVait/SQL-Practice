@@ -1,0 +1,35 @@
+/* my version*/
+
+SELECT orders.orderID, LastName, FirstName, orders.OrderDate, orders.ShipCity
+FROM orders
+INNER JOIN employees ON 1=1
+    AND employees.EmployeeID = orders.EmployeeID
+
+/*Condition for only those rows to be selected where order date is the latest
+one for each given employee, i.e. testing for last order date and employee pairs */
+
+WHERE EXISTS
+    (SELECT 1
+    FROM (SELECT orders.EmployeeID, max(OrderDate) AS max_OrderDate
+        FROM orders
+        GROUP BY orders.employeeID) AS last_orders
+    WHERE orders.EmployeeID = last_orders.EmployeeID AND orders.OrderDate = last_orders.max_OrderDate);
+
+
+/*answer suggested by the course*/
+/*creates a "mirror" table for orders table,
+and then finds the latest order date according by comparing the two tables*/
+
+SELECT  orders1.OrderID
+    ,   employees.LastName
+    ,   employees.FirstName
+    ,   orders1.OrderDate
+    ,   orders1.ShipCity
+FROM orders orders1
+JOIN employees ON orders1.EmployeeID = employees.EmployeeID
+WHERE NOT EXISTS (
+    SELECT  1
+    FROM orders orders2
+    WHERE orders1.EmployeeID = orders2.EmployeeID
+    AND orders2.OrderDate > orders1.OrderDate
+);

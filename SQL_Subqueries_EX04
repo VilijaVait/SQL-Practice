@@ -2,22 +2,3 @@ SELECT customerID, orderDate, shippedDate
 FROM orders
 WHERE shippedDate IN (
     SELECT MAX(shippedDate) FROM orders);
-
-
-SELECT customerName, contactLastName, contactFirstName, SUM(priceEach*quantityOrdered)
-    FROM customers
-    INNER JOIN orders ON 1=1
-        AND customers.customerNumber = orders.customerNumber
-    INNER JOIN orderdetails ON 1=1
-        AND orders.orderNumber = orderdetails.orderNumber
-    WHERE state IN ('NY','CA')
-    GROUP BY customerName, contactLastName, contactFirstName
-  ;
-
-SELECT  customerName
-    ,   contactLastName
-    ,   contactFirstName
-    ,   ( SELECT SUM(amount) FROM payments p WHERE c.customerNumber = p.customerNumber ) AS total
-FROM customers c
-WHERE state IN ( 'NY', 'CA' )
-;

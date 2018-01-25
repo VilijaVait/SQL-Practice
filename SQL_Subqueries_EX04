@@ -1,3 +1,8 @@
+/* Query: Display the customer ID, order date, and shipped date of all orders
+that were shipped most recently. */
+
+/*my verion*/
+
 SELECT customerID, orderDate, shippedDate
 FROM orders
 WHERE shippedDate IN (

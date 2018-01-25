@@ -1,0 +1,27 @@
+/* Query: Your boss thinks a lot of prank orders were made on 1996-07-04 through 1996-07-05.
+She wants to dig into this, and first wants to determine which categories were not target in this prank.
+Please get her a report showing the category name and description for all categories
+that did not have an order placed on those two dates. */
+
+SELECT Categories.CategoryName, Categories.Description
+
+FROM Categories
+
+WHERE Categories.CategoryName NOT IN (
+
+    SELECT
+        Dataset.CategoryName
+
+    FROM (SELECT Categories.CategoryID, Categories.CategoryName, Categories.Description, Orders.OrderDate
+    FROM Categories
+    INNER JOIN Products ON 1=1
+        AND Categories.CategoryID = Products.CategoryID
+    INNER JOIN [Order Details] ON 1=1
+        AND Products.ProductID = [Order Details].ProductID
+    INNER JOIN orders ON 1=1
+        AND [Order Details].OrderID = Orders.OrderID) AS Dataset
+
+
+    WHERE Dataset.OrderDate BETWEEN '1996-07-04' AND '1996-07-05')
+
+;

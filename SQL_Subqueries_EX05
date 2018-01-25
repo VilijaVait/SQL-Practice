@@ -1,3 +1,16 @@
+/* Query: Display the customer name, contact last name, contact first name,
+and the total amount the customer has paid for all customers from NY or CA*/
+
+/*answer suggested by the course*/
+SELECT  customerName
+    ,   contactLastName
+    ,   contactFirstName
+    ,   ( SELECT SUM(amount) FROM payments p WHERE c.customerNumber = p.customerNumber ) AS total
+FROM customers c
+WHERE state IN ( 'NY', 'CA' )
+;
+
+/* my version*/
 SELECT customerName, contactLastName, contactFirstName, SUM(priceEach*quantityOrdered)
     FROM customers
     INNER JOIN orders ON 1=1
@@ -7,11 +20,3 @@ SELECT customerName, contactLastName, contactFirstName, SUM(priceEach*quantityOr
     WHERE state IN ('NY','CA')
     GROUP BY customerName, contactLastName, contactFirstName
   ;
-
-SELECT  customerName
-    ,   contactLastName
-    ,   contactFirstName
-    ,   ( SELECT SUM(amount) FROM payments p WHERE c.customerNumber = p.customerNumber ) AS total
-FROM customers c
-WHERE state IN ( 'NY', 'CA' )
-;

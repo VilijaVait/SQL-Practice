@@ -1,3 +1,6 @@
+/* Query: Find the product lines that Rovelli Gifts has purchased from. */
+
+/*answer suggested by the course*/
 SELECT  productLine
 FROM ProductLines
 WHERE productLine IN (
@@ -8,7 +11,8 @@ WHERE productLine IN (
     JOIN customers c ON o.customerNumber = c.customerNumber
     WHERE c.customerName = 'Rovelli Gifts';
 
-    SELECT DISTINCT productLine
+/*my version*/
+SELECT DISTINCT productLine
     FROM products
         INNER JOIN orderdetails ON products.productCode=orderdetails.productCode
         INNER JOIN orders ON orderdetails.orderNumber=orders.orderNumber

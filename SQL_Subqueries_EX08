@@ -1,0 +1,13 @@
+/* Query: Your boss is really interested in your German customers.
+She wants to see if they are good customers.
+Please display the customer name and the largest payment made by that customer
+(but of course, only show customers who live in Germany). */
+
+SELECT
+    Customers.customerName,
+    max(Payments.amount)
+
+FROM Customers
+    INNER JOIN Payments on Customers.CustomerNumber=Payments.CustomerNumber
+    WHERE Customers.Country = 'Germany'
+GROUP BY Customers.customerName;

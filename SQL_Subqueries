@@ -1,0 +1,6 @@
+SELECT DISTINCT productLine
+FROM products
+    INNER JOIN orderdetails ON products.productCode=orderdetails.productCode
+    INNER JOIN orders ON orderdetails.orderNumber=orders.orderNumber
+    INNER JOIN customers ON orders.customerNumber=customers.customerNumber
+WHERE customers.customerName LIKE '%Rovelli Gifts%';

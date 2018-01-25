@@ -1,3 +1,5 @@
+/* Query: Your boss is worried about a few of the sales representatives. He wants a report to see the last time each one of them had an order. Please show the order id, the employee last name, the employee first name, the date of the order, and the city the order was shipped to. But he doesn't want to see every order, just the most recent order for each employee. Thanks!*/
+
 /* my version*/
 
 SELECT orders.orderID, LastName, FirstName, orders.OrderDate, orders.ShipCity

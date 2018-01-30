@@ -1,0 +1,12 @@
+/* Query: Display the city, country, and most recent order of each office */
+
+SELECT offices.city, offices.country, max(orders.OrderDate)
+
+FROM offices
+INNER JOIN employees ON 1=1
+    AND offices.officeCode=employees.officeCode
+INNER JOIN customers ON 1=1
+    AND employees.employeeNumber = customers.salesRepEmployeeNumber
+INNER JOIN orders ON 1=1
+    AND customers.customerNumber = orders.customerNumber
+GROUP BY offices.officecode, offices.city, offices.country;

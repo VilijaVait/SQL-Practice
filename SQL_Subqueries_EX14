@@ -1,0 +1,26 @@
+/* Query For all G rated films beginning with the letter 'T', display the title,
+the number of actors in the film, and the number of times it was rented. */
+
+SELECT film.title, actor_count, rental_count
+FROM film
+
+INNER JOIN
+    (SELECT title, count(actor_id) AS actor_count
+    FROM film
+    INNER JOIN film_actor ON 1=1
+        AND film.film_id=film_actor.film_id
+    GROUP BY title) AS title_actor ON 1=1
+        AND title_actor.title = film.title
+
+INNER JOIN
+    (SELECT title, count(rental_id) AS rental_count
+    FROM film
+    INNER JOIN inventory ON 1=1
+        AND film.film_id=inventory.film_id
+    INNER JOIN rental ON 1=1
+        AND inventory.inventory_id=rental.inventory_id
+    GROUP BY title) AS title_rental ON 1=1
+        AND title_rental.title = film.title
+
+WHERE rating = 'G' AND film.title LIKE 'T%'
+;

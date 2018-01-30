@@ -1,0 +1,53 @@
+/* Query Display the actor's first name, the actor's last name,
+and the number of G-rated movies they have been in for all actors
+who have been in more G-rated movies than R-rated moves and NC17-rated movies combined. */
+
+/* short alternative */
+
+SELECT	actor.first_name,
+		actor.last_name,
+		ratings_table.Rating_G
+FROM (
+	SELECT	film_actor.actor_id,
+			COUNT( CASE WHEN film.rating = 'G' THEN 1 END ) AS Rating_G,
+			COUNT( CASE WHEN film.rating = 'PG' THEN 1 END ) AS Rating_PG,
+			COUNT( CASE WHEN film.rating = 'PG-13' THEN 1 END ) AS Rating_PG13,
+			COUNT( CASE WHEN film.rating = 'R' THEN 1 END ) AS Rating_R,
+			COUNT( CASE WHEN film.rating = 'NC-17' THEN 1 END ) AS Rating_NC17
+	FROM film_actor
+	JOIN film ON film_actor.film_id = film.film_id
+	GROUP BY film_actor.actor_id ) ratings_table
+
+JOIN actor ON ratings_table.actor_id = actor.actor_id
+WHERE ratings_table.Rating_G > (Rating_R + Rating_NC17);
+
+/* long version */
+
+SELECT
+    actor.first_name,
+    actor.last_name,
+    G_movies
+
+FROM (
+    SELECT film_actor.actor_id, count(rating) as G_movies
+    FROM film
+    INNER JOIN film_actor ON 1=1
+        AND film_actor.film_id=film.film_id
+    WHERE film.rating = 'G'
+    GROUP BY film_actor.actor_id, film.rating) AS G_table
+
+INNER JOIN (
+    SELECT film_actor.actor_id, count(rating) as RNC17_movies
+    FROM film
+    INNER JOIN film_actor ON 1=1
+        AND film_actor.film_id=film.film_id
+    WHERE rating = 'R' or rating = 'NC-17'
+    GROUP BY film_actor.actor_id) AS RNC17_table ON 1=1
+
+    AND G_table.actor_id=RNC17_table.actor_id
+
+INNER JOIN actor ON 1=1
+    AND G_table.actor_id=actor.actor_id
+
+WHERE G_table.G_movies>RNC17_table.RNC17_movies
+;

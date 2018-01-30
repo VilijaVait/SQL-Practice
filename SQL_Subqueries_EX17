@@ -1,0 +1,13 @@
+/* Query: A late return is when someone returned their rental 8 or more days after they checked it out.
+Find the first name and last name of customers who have NEVER returned their rental late. */
+
+SELECT
+  customer.first_name,
+  customer.last_name
+FROM customer
+WHERE customer.customer_id NOT IN
+
+(SELECT
+    rental.customer_id
+FROM rental
+WHERE DATEADD(DD, 8, rental.rental_date) < rental.return_date);

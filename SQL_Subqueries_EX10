@@ -1,0 +1,9 @@
+/* Query Find the total number of orders of customers from the city of London. */
+
+SELECT COUNT(orders.OrderID)
+FROM orders
+INNER JOIN customers ON 1=1
+    AND orders.customerID=customers.CustomerID
+WHERE customers.City='London'
+GROUP BY customers.City
+;

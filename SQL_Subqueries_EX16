@@ -1,0 +1,29 @@
+/* Query: Display the customer's first name and last name, their store city and country,
+and the date of the customer's first purchase for all customers whose
+first purchase date was before 2005-05-25. */
+
+SELECT
+    customer.first_name,
+    customer.last_name,
+    city.city,
+    country.country,
+    id_first_payment.first_payment
+
+FROM (
+    SELECT
+        payment.customer_id,
+        min(payment.payment_date) AS first_payment
+    FROM payment
+    GROUP BY payment.customer_id
+    HAVING min(payment.payment_date) < '2005-05-25') AS id_first_payment
+
+INNER JOIN customer ON 1=1
+    AND customer.customer_id = id_first_payment.customer_id
+INNER JOIN store ON 1=1
+    AND store.store_id = customer.store_id
+INNER JOIN address ON 1=1
+    AND address.address_id = store.address_id
+INNER JOIN city ON 1=1
+    AND city.city_id = address.city_id
+INNER JOIN country ON 1=1
+    AND city.country_id = country.country_id;

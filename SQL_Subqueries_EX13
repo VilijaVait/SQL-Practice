@@ -1,0 +1,19 @@
+/* Query: Display the customer first name, last name, the rental date,
+and the rental amount for all rentals that took place after Philip Causey's most recent rental.
+Also, only include rentals that cost over $7. */
+
+SELECT customer.first_name, customer.last_name, rental.rental_date, payment.amount
+FROM rental
+INNER JOIN customer ON 1=1
+    AND rental.customer_id=customer.customer_id
+INNER JOIN payment ON 1=1
+    AND rental.rental_id=payment.rental_id
+WHERE rental.rental_date > (
+    SELECT max(rental_date)
+    FROM rental
+    WHERE rental.customer_id IN (
+        SELECT customer.customer_id
+        FROM customer
+        WHERE customer.first_name = 'Philip' and customer.last_name = 'Causey')
+    GROUP BY rental.customer_id)
+    AND payment.amount > 7;

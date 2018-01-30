@@ -1,0 +1,44 @@
+/* Query: For all addresses that don't belong to a customer, display the address, the city,
+and the country. Also display 'Staff' if the address belongs to a staff member or 'Store'
+if the address belongs to a store*/
+
+SELECT
+    address,
+    city,
+    country,
+    (CASE WHEN staff_address = 1 THEN 'Staff' ELSE 'Store' END) AS type
+
+FROM ( SELECT
+    address.address,
+    city.city,
+    country.country,
+    CASE WHEN address.address_ID IN (SELECT address_ID FROM staff) THEN 1 ELSE 0 END AS staff_address,
+    CASE WHEN address.address_ID IN (SELECT address_ID FROM store) THEN 1 ELSE 0 END AS store_address
+
+	FROM address
+	JOIN city ON 1=1
+	    AND city.city_id=address.city_id
+	JOIN country ON 1=1
+	    AND country.country_id=city.country_id
+	WHERE address.address_id NOT IN (SELECT address_id FROM customer)
+	) AS main_table
+;
+
+/* alternative */
+
+SELECT
+  address,
+	city,
+	country,
+	CASE WHEN in_staff = 1 THEN 'Staff' ELSE 'Store' END AS type
+FROM (
+	SELECT	address.address,
+		city.city,
+		country.country,
+		( SELECT 1 FROM staff WHERE address_id = address.address_id ) AS in_staff,
+		( SELECT 1 FROM store WHERE address_id = address.address_id ) AS in_store
+	FROM address
+	JOIN city ON address.city_id = city.city_id
+	JOIN country ON city.country_id = country.country_id
+	WHERE address.address_id NOT IN (SELECT address_id FROM customer)
+) main_table;

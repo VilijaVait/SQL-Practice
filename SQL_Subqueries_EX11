@@ -1,0 +1,9 @@
+/*Query:
+Display all city information for cities from Pakistan.*/
+
+SELECT *
+FROM city
+WHERE EXISTS (
+SELECT 1
+FROM country
+WHERE country='Pakistan' AND city.country_id=country.country_id);

@@ -1,0 +1,25 @@
+/* Query: Display the category name and the number of NC17 movies in that category
+for categories having more NC17-rated movies than any other rating. */
+
+
+SELECT
+    category.name,
+		ratings_table.Rating_NC17
+FROM (
+	SELECT	film_category.category_id,
+			COUNT( CASE WHEN film.rating = 'G' THEN 1 END ) AS Rating_G,
+			COUNT( CASE WHEN film.rating = 'PG' THEN 1 END ) AS Rating_PG,
+			COUNT( CASE WHEN film.rating = 'PG-13' THEN 1 END ) AS Rating_PG13,
+			COUNT( CASE WHEN film.rating = 'R' THEN 1 END ) AS Rating_R,
+			COUNT( CASE WHEN film.rating = 'NC-17' THEN 1 END ) AS Rating_NC17
+	FROM film_category
+	JOIN film ON film_category.film_id = film.film_id
+	GROUP BY film_category.category_id ) ratings_table
+
+JOIN category ON ratings_table.category_id = category.category_id
+WHERE 1=1
+    AND ratings_table.Rating_NC17 > Rating_G
+    AND ratings_table.Rating_NC17 > Rating_PG
+    AND ratings_table.Rating_NC17 > Rating_PG13
+    AND ratings_table.Rating_NC17 > Rating_R
+;

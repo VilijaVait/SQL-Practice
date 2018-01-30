@@ -1,0 +1,23 @@
+/*QUery: For all PG films, display the title, release year,
+and rating of all films with an actor with the first name of Tom.*/
+
+SELECT title, release_year, rating
+FROM film
+WHERE rating = 'PG' AND film_id IN (
+    SELECT film_id
+    FROM film_actor
+    INNER JOIN actor ON 1=1
+        AND film_actor.actor_id=actor.actor_id
+    WHERE first_name = 'Tom');
+
+/* alternative */
+
+SELECT title, release_year, rating
+FROM film
+WHERE rating = 'PG' AND
+EXISTS (
+    SELECT 1
+    FROM film_actor
+    INNER JOIN actor ON 1=1
+        AND film_actor.actor_id=actor.actor_id
+    WHERE film_actor.film_id=film.film_id AND first_name = 'Tom');

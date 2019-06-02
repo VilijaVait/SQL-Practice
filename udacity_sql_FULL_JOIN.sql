@@ -33,9 +33,39 @@ SELECT w1.id AS o1_id,
        w2.account_id AS o2_account_id,
        w2.occurred_at AS o2_occurred_at,
        w2.channel AS o2_channel
-  FROM web_events w1
- LEFT JOIN web_events w2
+FROM web_events w1
+LEFT JOIN web_events w2
    ON w1.account_id = w2.account_id
-  AND w2.occurred_at > w1.occurred_at
-  AND w2.occurred_at <= w1.occurred_at + INTERVAL '1 days'
+   AND w2.occurred_at > w1.occurred_at
+   AND w2.occurred_at <= w1.occurred_at + INTERVAL '1 days'
 ORDER BY w1.account_id, w1.occurred_at
+
+
+/* Doing 'local' counts within tables and then joining the tables for final
+   count of daily active sales reps, orders and web events, in order to
+   improve the query efficiency*/
+   
+SELECT COALESCE(order_count.date, web_event_count.date) AS date,
+     order_count.active_sales_reps,
+     order_count.total_orders,
+     web_event_count.web_visits
+FROM (
+    SELECT DATE_TRUNC('day', o.occurred_at) AS date,
+           COUNT(a.sales_rep_id) AS active_sales_reps,
+           COUNT(o.id) AS total_orders
+    FROM accounts AS a
+    JOIN orders AS o
+        ON o.account_id = a.id
+    GROUP BY 1
+) order_count
+
+FULL JOIN (
+    SELECT DATE_TRUNC('day', we.occurred_at) AS date,
+           COUNT(we.id) as web_visits
+    FROM web_events AS we
+    GROUP BY 1
+) web_event_count
+
+    ON order_count.date = web_event_count.date
+
+ORDER BY 1;

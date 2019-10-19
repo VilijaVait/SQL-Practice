@@ -1,5 +1,6 @@
 -- Finding all data about costomer's first order
 -- Should have 1 row for each customer
+-- Filter by customers served by staff member with staff_id=2
 
 SELECT *
 FROM (
@@ -25,6 +26,7 @@ FROM (
 WHERE t.order_num < 6
 ORDER BY 2;
 
+-- get customer's first orders
 WITH first_orders AS (
 					SELECT t.* 
 					FROM (
@@ -37,6 +39,7 @@ SELECT * FROM first_orders;
 
 -- row number
 -- can you get a list of orders by staff member, in reverse order?
+-- limit to last five orders by staff member 
 
 SELECT t.* 
 FROM (
@@ -59,9 +62,12 @@ SELECT rn.*,
 FROM random_numbers rn;
 
 -- Get order number
+-- Annotate first order and repeat orders per customer
 
-WITH order_numbers AS (SELECT p.*, row_number() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date) order_nm
-					   FROM payment p)
+WITH order_numbers AS (
+	SELECT p.*, 
+		   ROW_NUMBER() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date) order_nm
+		   FROM payment p)
 SELECT ons.*,
 	   CASE
 	   	 WHEN ons.order_nm = 1 THEN 'first_order'
@@ -69,12 +75,12 @@ SELECT ons.*,
 	   END AS order_type
 FROM order_numbers ons;
 
--- Get buyer_id, first order date, last order date and total spend (LTV)
+-- Get customer_id, first order date, last order date and total spend (LTV)
 
 WITH customer_orders AS
 		(SELECT p.customer_id, p.payment_date,
-			   row_number() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date ASC)  AS first_order,
-			   row_number() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date DESC) AS last_order
+			   ROW_NUMBER() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date ASC)  AS first_order,
+			   ROW_NUMBER() OVER (PARTITION BY p.customer_id ORDER BY p.payment_date DESC) AS last_order
 		FROM payment p),
 	 edge_orders AS
 		(SELECT co.*
@@ -89,12 +95,12 @@ SELECT customer_id,
 	   ) AS ltv_spend
 FROM edge_orders eo
 GROUP BY 1
-ORDER BY 1
+ORDER BY 1;
 
 -- Get preferred movie rating of each customer
 WITH customer_rating_count AS 
 	(SELECT r.customer_id, f.rating, COUNT(r.*),
-	 		row_number() OVER(PARTITION BY r.customer_id ORDER BY COUNT(r.*) DESC) AS rating_rank
+	 		ROW_NUMBER() OVER(PARTITION BY r.customer_id ORDER BY COUNT(r.*) DESC) AS rating_rank
 	FROM rental r
 		JOIN inventory i ON i.inventory_id = r.inventory_id
 		JOIN film f 	 ON f.film_id = i.film_id
@@ -103,7 +109,7 @@ WITH customer_rating_count AS
 SELECT * 
 FROM customer_rating_count crc
 WHERE crc.rating_rank = 1
-ORDER BY 1
+ORDER BY 1;
 
 -- List all watched ratings for each customer
 SELECT 	r.customer_id, 
@@ -113,7 +119,7 @@ FROM rental r
 	JOIN inventory i ON i.inventory_id = r.inventory_id
 	JOIN film f 	 ON f.film_id = i.film_id
 GROUP BY 1
-ORDER BY 1
+ORDER BY 1;
 
 -- Show sales by staff for each day/hour and each staff member's sales as percentage of total sales in that day/hour
 WITH sales_by_hour AS (
@@ -224,13 +230,13 @@ WITH rental_ord AS
 		   ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY rental_date) AS rental_order
 	FROM rental
 	ORDER BY 1,2)
-SELECT f.rating, COUNT(*) rating_ccount
+SELECT f.rating, COUNT(*) AS rating_count
 FROM rental_ord ro 
 JOIN inventory i ON i.inventory_id = ro.inventory_id
 JOIN film f ON f.film_id = i.film_id
 WHERE ro.rental_order = 1
 GROUP BY CUBE (f.rating)
-ORDER BY 2 DESC
+ORDER BY 2 DESC;
 
 -- Does first time rented movie rating predict lifetime value?
 WITH rental_ord AS (
@@ -269,7 +275,10 @@ WITH rental_ord AS (
 	GROUP BY t2.customer_id
 	)
 
-SELECT t3.rating, t3.customer_term_grp, AVG(t3.f_annual_spend), MIN(t3.f_annual_spend), MAX(t3.f_annual_spend)
+SELECT t3.rating, t3.customer_term_grp, 
+	   AVG(t3.f_annual_spend) AS average_annual_spend, 
+	   MIN(t3.f_annual_spend) AS min_annual_spend, 
+	   MAX(t3.f_annual_spend) AS max_annual_spend
 FROM (
 	SELECT fo.customer_id, fo.rating, 
 	   cltv.customer_total_spend,
@@ -297,7 +306,8 @@ WITH t1 AS
 	  JOIN inventory i ON f.film_id = i.film_id
 	  JOIN rental r ON r.inventory_id = i.inventory_id
 	  JOIN payment p ON p.rental_id = r.rental_id
-	),  
+	), 
+	
 -- check that payment_id and actor_id are unique to each row -- result from below query should be none
 -- SELECT payment_id, actor_id, COUNT(*) FROM t1 GROUP BY 1,2 HAVING COUNT(*) >2 
 
@@ -355,8 +365,98 @@ WITH t1 AS
 SELECT COALESCE (t1.film_id, t2.film_id) as film_id, t2.title, t2.movie_earning, t1.actor_count,
 	   t2.movie_earning::numeric/t1.actor_count AS earning_per_actor,
 	   ROW_NUMBER() OVER (ORDER BY t2.movie_earning DESC) AS movie_earnings_rank,
-	   ROW_NUMBER() OVER (ORDER BY t2.movie_earning::numeric/t1.actor_count DESC) AS movie_earnings_rank
+	   ROW_NUMBER() OVER (ORDER BY t2.movie_earning::numeric/t1.actor_count DESC) AS movie_earnings_per_actor_rank
 FROM t1
   FULL JOIN t2 ON t1.film_id = t2.film_id
 WHERE t2.movie_earning > 0 AND t1.actor_count > 0 
-ORDER BY t2.movie_earning::numeric/t1.actor_count DESC NULLS LAST
+ORDER BY t2.movie_earning::numeric/t1.actor_count DESC NULLS LAST;
+
+-- first, first 7, first 14  days, etc
+
+SELECT d,
+	   d + INTERVAL '7 days' AS int_7_days,
+	   d + INTERVAL '14 days'AS int_14_days 
+FROM generate_series('2017-01-01', current_date, INTERVAL '1 day') d
+
+-- select first orders
+
+WITH first_orders AS (
+	SELECT t1.* 
+	FROM 
+		(SELECT *,
+			   ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY payment_date) AS payment_order	
+		FROM payment) t1
+	WHERE t1.payment_order = 1) 
+	
+SELECT fo.customer_id, fo.payment_date AS first_payment_date, (
+	   SELECT SUM(p.amount)	
+	   FROM payment p	
+	   WHERE p.customer_id = fo.customer_id) AS total_spend,
+	   (SELECT SUM(p.amount)	
+	   FROM payment p	
+	   WHERE p.customer_id = fo.customer_id
+	   AND p.payment_date BETWEEN fo.payment_date AND fo.payment_date + INTERVAL '7 days') AS first_7d_spend,
+	   (SELECT SUM(p.amount)	
+	   FROM payment p	
+	   WHERE p.customer_id = fo.customer_id
+	   AND p.payment_date BETWEEN fo.payment_date AND fo.payment_date + INTERVAL '14 days') AS first_14d_spend
+
+FROM first_orders fo
+
+-- create table customer_source
+-- CREATE TABLE IF NOT EXISTS customer_source (
+-- 	customer_id integer REFERENCES customer(customer_id) ON DELETE RESTRICT,
+-- 	traffic_source text,
+-- 	PRIMARY KEY(customer_id));
+-- populate data from 'customer_sources.csv' prapared in 
+-- Jupyter Notebook 'http://localhost:8888/notebooks/DVDRental%20-%20Create%20additional%20random%20data.ipynb' 
+
+SELECT c.customer_id, c.first_name, c.email, cs.traffic_source 
+FROM customer c
+JOIN customer_source cs
+  ON c.customer_id = cs.customer_id
+ORDER BY c.customer_id
+
+-- create table source_spend_all
+-- CREATE TABLE IF NOT EXISTS source_spend_all (
+-- 	spend_source text,
+-- 	spend integer,
+-- 	visits integer);
+	
+-- INSERT INTO source_spend_all (spend_source, spend, visits)
+-- VALUES ('google / cpc',1606,995),
+-- 	('direct / none',0,755),
+-- 	('google / organic',170,455),
+-- 	('moviereviews / display',2886,1200),
+-- 	('bing / cpc',133,45)
+
+-- Show spend per channel, and attributable income, margin and customers gained
+
+CREATE VIEW channel_totals AS
+(WITH table_1 AS
+	(SELECT c.customer_id, c.first_name, c.email, cs.traffic_source, 
+		   (SELECT SUM(p.amount) FROM payment p WHERE p.customer_id = c.customer_id) AS total_spend
+	FROM customer c
+	JOIN customer_source cs
+	  ON c.customer_id = cs.customer_id
+	ORDER BY c.customer_id
+	)
+
+SELECT t1.traffic_source, ssa.spend AS channel_spend, 
+	   SUM(t1.total_spend) income_per_channel, 
+	   (SUM(t1.total_spend)/3)::numeric margin_per_channel,
+	   COUNT(*) customer_per_channel
+FROM channel_totals t1
+JOIN source_spend_all ssa 
+  ON ssa.spend_source = t1.traffic_source 
+GROUP BY 1,2
+ORDER BY 2 DESC;
+)
+
+-- calculate income and margin earned by dollar of spend (in channel), and acquisition cost per customer
+
+SELECT ct.*,
+	   ROUND(income_per_channel/NULLIF(channel_spend,0),2) AS income_per_dollar_spent,
+	   ROUND(margin_per_channel/NULLIF(channel_spend,0),2) AS margin_per_dollar_spent,
+	   ROUND(channel_spend::numeric/NULLIF(customer_per_channel,0),2) AS CAC
+FROM channel_totals ct
